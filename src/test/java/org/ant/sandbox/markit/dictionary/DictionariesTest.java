@@ -7,6 +7,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import static java.lang.String.format;
 import static org.testng.Assert.assertTrue;
 
 @Test
@@ -15,24 +16,27 @@ public class DictionariesTest {
     public void testDictionary() throws InterruptedException, InstantiationException, IllegalAccessException {
         int repetitions = 1000;
         int readerThreads = Runtime.getRuntime().availableProcessors() * 2;
-        System.out.println("Using " + readerThreads + " reader threads");
-        long fastDictionaryAverage = testDictionary(FastDictionary.class, readerThreads, repetitions);
-        System.out.println("Fast dictionary average " + fastDictionaryAverage / 1e9 + " sec");
-        long slowDictionaryAverage = testDictionary(SlowDictionary.class, readerThreads, repetitions);
-        System.out.println("Slow dictionary average " + slowDictionaryAverage / 1e9 + " sec");
+        System.out.println(format("Using %d reader threads", readerThreads));
+        long fastDictionaryTime = testDictionary(FastDictionary.class, readerThreads, repetitions);
+        System.out.println(format("Fast dictionary time %.5f sec.", fastDictionaryTime / 1e9));
+        long slowDictionaryTime = testDictionary(SlowDictionary.class, readerThreads, repetitions);
+        System.out.println(format("Slow dictionary time %.5f sec.", slowDictionaryTime / 1e9));
         // fingers crossed ;)
-        assertTrue(fastDictionaryAverage < slowDictionaryAverage);
+        assertTrue(fastDictionaryTime < slowDictionaryTime);
     }
 
     /**
-     * Test dictionary. This method will simulate concurrent access to dictionary by adding new words
-     * into the dictionary while <code>readerThreads</code> number of threads are simultaneously reading from it.
+     * Poor man's microbenchmarking. This method will simulate concurrent access to dictionary by adding new words
+     * to it while <code>readerThreads</code> number of threads are simultaneously reading from it.
      */
     private long testDictionary(Class<? extends Dictionary> clazz, int readerThreads, int repetitions) throws InterruptedException, IllegalAccessException, InstantiationException {
-        long average = 0;
-        for (int i = 0; i < 220; i++) {
+        int cycles = 200;
+        int warmupCycles = 20;
+        long averageTime = 0;
+        for (int i = 0; i < cycles + warmupCycles; i++) {
             final Dictionary d = clazz.newInstance();
             ExecutorService executor = Executors.newCachedThreadPool();
+            // using barrier to start reading and writing simultaneously
             final CyclicBarrier b = new CyclicBarrier(readerThreads + 1);
             System.gc();
             long start = System.nanoTime();
@@ -43,12 +47,14 @@ public class DictionariesTest {
             executor.shutdown();
             executor.awaitTermination(60, TimeUnit.SECONDS);
             long duration = System.nanoTime() - start;
-            if (i >= 20) {
-                int j = i - 20;
-                average = (duration + j * average) / (j + 1);
+            // allow for a little warmup before we start counting time
+            if (i >= warmupCycles) {
+                int j = i - warmupCycles;
+                // calculation moving averageTime
+                averageTime = (duration + j * averageTime) / (j + 1);
             }
         }
-        return average;
+        return averageTime;
     }
 
     private static class TranslateSpecificWordWorker implements Runnable {
