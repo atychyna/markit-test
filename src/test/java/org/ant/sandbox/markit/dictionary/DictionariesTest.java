@@ -1,24 +1,33 @@
-package org.ant.sandbox.markit;
+package org.ant.sandbox.markit.dictionary;
 
-import junit.framework.TestCase;
+import org.testng.annotations.Test;
 
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class DictionaryTest extends TestCase {
+import static org.testng.Assert.assertTrue;
+
+@Test
+public class DictionariesTest {
 
     public void testDictionary() throws InterruptedException, InstantiationException, IllegalAccessException {
-        int repetitions = 10000;
+        int repetitions = 1000;
         int readerThreads = Runtime.getRuntime().availableProcessors() * 2;
         System.out.println("Using " + readerThreads + " reader threads");
-        long average = testDictionary(FastDictionary.class, readerThreads, repetitions);
-        System.out.println("Fast dictionary average " + average / 1e9 + " sec");
-        average = testDictionary(SlowDictionary.class, readerThreads, repetitions);
-        System.out.println("Slow dictionary average " + average / 1e9 + " sec");
+        long fastDictionaryAverage = testDictionary(FastDictionary.class, readerThreads, repetitions);
+        System.out.println("Fast dictionary average " + fastDictionaryAverage / 1e9 + " sec");
+        long slowDictionaryAverage = testDictionary(SlowDictionary.class, readerThreads, repetitions);
+        System.out.println("Slow dictionary average " + slowDictionaryAverage / 1e9 + " sec");
+        // fingers crossed ;)
+        assertTrue(fastDictionaryAverage < slowDictionaryAverage);
     }
 
+    /**
+     * Test dictionary. This method will simulate concurrent access to dictionary by adding new words
+     * into the dictionary while <code>readerThreads</code> number of threads are simultaneously reading from it.
+     */
     private long testDictionary(Class<? extends Dictionary> clazz, int readerThreads, int repetitions) throws InterruptedException, IllegalAccessException, InstantiationException {
         long average = 0;
         for (int i = 0; i < 220; i++) {

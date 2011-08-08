@@ -1,4 +1,4 @@
-package org.ant.sandbox.markit;
+package org.ant.sandbox.markit.dictionary;
 
 import java.util.Set;
 

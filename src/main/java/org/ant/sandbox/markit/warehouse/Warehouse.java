@@ -6,9 +6,12 @@ import java.util.Collection;
  * @author Anton Tychyna
  */
 public interface Warehouse {
-    Collection<Supplier> getSuppliers();
+    void setSuppliers(Collection<Supplier> suppliers);
 
-    Collection<Supplier> getConsumers();
+    void setConsumers(Collection<Consumer> suppliers);
 
+    /**
+     * Run daily operation (one cycle of supply-consume)
+     */
     void runOperation();
 }
