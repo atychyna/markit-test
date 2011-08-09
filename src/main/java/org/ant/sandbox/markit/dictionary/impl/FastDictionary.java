@@ -1,4 +1,6 @@
-package org.ant.sandbox.markit.dictionary;
+package org.ant.sandbox.markit.dictionary.impl;
+
+import org.ant.sandbox.markit.dictionary.Dictionary;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;

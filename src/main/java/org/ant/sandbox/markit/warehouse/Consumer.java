@@ -13,9 +13,9 @@ public interface Consumer<P extends Product> {
 
     /**
      * @param products products to consume
-     * @return number of consumed products
+     * @return products that were not consumed (e.g. if more products than needed was supplied)
      */
-    int consume(Collection<P> products);
+    Collection<P> consume(Collection<P> products);
 
     /**
      * One consumer can only work with one type of product.

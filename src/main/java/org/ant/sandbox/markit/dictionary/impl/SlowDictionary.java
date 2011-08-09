@@ -1,4 +1,6 @@
-package org.ant.sandbox.markit.dictionary;
+package org.ant.sandbox.markit.dictionary.impl;
+
+import org.ant.sandbox.markit.dictionary.Dictionary;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,6 +26,10 @@ public class SlowDictionary implements Dictionary {
         dict.put(word, translation);
     }
 
+    /**
+     * BTW: potential problem - resulting set is not thread-safe and what even worse - mutable
+     * with every change affecting underlying map.
+     */
     public synchronized Set<String> getAllWords() {
         return dict.keySet();
     }

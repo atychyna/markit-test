@@ -16,7 +16,7 @@ public interface Supplier<P extends Product> {
     /**
      * Supply <code>quantity</code> number of products.
      *
-     * @param quantity quantity, can never be greater than {@link #getStockQuantity()}
+     * @param quantity quantity, implementations should handle cases when quantity > stockQuantity
      * @return supplied products
      */
     Collection<P> supply(int quantity);

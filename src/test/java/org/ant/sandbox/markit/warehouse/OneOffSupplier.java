@@ -22,7 +22,7 @@ final class OneOffSupplier<P extends Product> implements Supplier<P> {
     }
 
     public Collection<P> supply(int quantity) {
-        int q = quantity > stockQuantity ? stockQuantity : quantity;
+        int q = Math.min(quantity, stockQuantity);
         stockQuantity -= q;
         return Collections.nCopies(q, sampleProduct);
     }

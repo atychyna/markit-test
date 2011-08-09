@@ -1,5 +1,7 @@
 package org.ant.sandbox.markit.dictionary;
 
+import org.ant.sandbox.markit.dictionary.impl.FastDictionary;
+import org.ant.sandbox.markit.dictionary.impl.SlowDictionary;
 import org.testng.annotations.Test;
 
 import java.util.concurrent.CyclicBarrier;
@@ -14,8 +16,10 @@ import static org.testng.Assert.assertTrue;
 public class DictionariesTest {
 
     public void testDictionary() throws InterruptedException, InstantiationException, IllegalAccessException {
-        int repetitions = 1000;
+        // number of concurrent threads that read (translate word from) dictionary
         int readerThreads = Runtime.getRuntime().availableProcessors() * 2;
+        // reader threads will translate a word in loop this number of times
+        int repetitions = 5000;
         System.out.println(format("Using %d reader threads", readerThreads));
         long fastDictionaryTime = testDictionary(FastDictionary.class, readerThreads, repetitions);
         System.out.println(format("Fast dictionary time %.5f sec.", fastDictionaryTime / 1e9));
@@ -29,7 +33,8 @@ public class DictionariesTest {
      * Poor man's microbenchmarking. This method will simulate concurrent access to dictionary by adding new words
      * to it while <code>readerThreads</code> number of threads are simultaneously reading from it.
      */
-    private long testDictionary(Class<? extends Dictionary> clazz, int readerThreads, int repetitions) throws InterruptedException, IllegalAccessException, InstantiationException {
+    private long testDictionary(Class<? extends Dictionary> clazz, int readerThreads,
+                                int repetitions) throws InterruptedException, IllegalAccessException, InstantiationException {
         int cycles = 200;
         int warmupCycles = 20;
         long averageTime = 0;
@@ -42,7 +47,7 @@ public class DictionariesTest {
             long start = System.nanoTime();
             executor.submit(new CreateNewTranslationsWorker(d, repetitions, b));
             for (int j = 0; j < readerThreads; j++) {
-                executor.submit(new TranslateSpecificWordWorker(d, repetitions, b));
+                executor.submit(new TranslateSpecificWordWorker("word0", d, repetitions, b));
             }
             executor.shutdown();
             executor.awaitTermination(60, TimeUnit.SECONDS);
@@ -61,8 +66,10 @@ public class DictionariesTest {
         private final Dictionary d;
         private final int repetitionCount;
         private final CyclicBarrier b;
+        private String word;
 
-        public TranslateSpecificWordWorker(Dictionary d, int repetitionCount, CyclicBarrier b) {
+        public TranslateSpecificWordWorker(String word, Dictionary d, int repetitionCount, CyclicBarrier b) {
+            this.word = word;
             this.d = d;
             this.repetitionCount = repetitionCount;
             this.b = b;
@@ -72,7 +79,7 @@ public class DictionariesTest {
             awaitOnBarrier(b);
             for (int j = 0; j < repetitionCount; j++) {
                 try {
-                    d.translate("word0");
+                    d.translate(word);
                 } catch (IllegalArgumentException e) {
                     // do nothing
                 }

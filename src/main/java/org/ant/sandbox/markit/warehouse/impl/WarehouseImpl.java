@@ -1,4 +1,8 @@
-package org.ant.sandbox.markit.warehouse;
+package org.ant.sandbox.markit.warehouse.impl;
+
+import org.ant.sandbox.markit.warehouse.Consumer;
+import org.ant.sandbox.markit.warehouse.Supplier;
+import org.ant.sandbox.markit.warehouse.Warehouse;
 
 import java.util.*;
 
@@ -44,7 +48,7 @@ public class WarehouseImpl implements Warehouse {
                     while (c.getOrderQuantity() > 0 && i.hasNext()) {
                         Supplier s = i.next();
                         if (s.getStockQuantity() > 0) {
-                            c.consume(s.supply(s.getStockQuantity() <= c.getOrderQuantity() ? s.getStockQuantity() : c.getOrderQuantity()));
+                            c.consume(s.supply(c.getOrderQuantity()));
                         }
                     }
                 }
